@@ -1,46 +1,121 @@
-# Getting Started with Create React App
+# Voice Chat Web Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Overview
+This is a React-based web application that captures user voice input, converts it into text, and sends it to a backend for processing. The backend generates an audio response, which is then played back to the user. The application leverages the Web Speech API for speech recognition and Axios for HTTP requests.
 
-## Available Scripts
+## Features
+- **Voice Recognition**: Captures user speech and transcribes it into text.
+- **Debounced Request**: Ensures that the request is sent only after the user stops speaking for a short period.
+- **Backend Integration**: Sends the transcribed text to a backend endpoint (`/chat`).
+- **Audio Playback**: Plays the response audio received from the backend.
 
-In the project directory, you can run:
+## Technologies Used
+- **React**: Frontend framework
+- **Web Speech API**: Handles speech recognition
+- **Axios**: Manages HTTP requests
+- **HTML5 Audio API**: Plays the audio response
 
-### `npm start`
+## Installation
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+### Prerequisites
+- Node.js and npm installed
+- A backend service running at `http://localhost:3000/chat`
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+### Steps to Run
+1. Clone the repository:
+   ```sh
+   git clone <repository-url>
+   cd <project-folder>
+   ```
+2. Install dependencies:
+   ```sh
+   npm install
+   ```
+3. Start the application:
+   ```sh
+   npm start
+   ```
 
-### `npm test`
+## Usage
+1. Click the **"🎤 Press to Speak"** button.
+2. Speak into your microphone; the app will transcribe your speech in real time.
+3. After 3 seconds of inactivity, the text will be sent to the backend.
+4. The backend will return an audio response, which will be played automatically.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant SpeechRecognition
+    participant ReactState
+    participant Backend
+    participant React
+    User->>SpeechRecognition: Speaks
+    SpeechRecognition->>ReactState: Transcribes speech
+    ReactState-->>Backend: Sends Text (after 3s)
+    Backend->>React: Generates Audio
+    React->>User: Plays Audio
+```
 
-### `npm run build`
+## Code Explanation
+### `useEffect` for Debounce
+This ensures that the request is sent **only after 3 seconds of inactivity**:
+```tsx
+useEffect(() => {
+  if (keyword && keyword.length > 0) {
+    const debounceTimer = setTimeout(async () => {
+      try {
+        const response = await axios.post("http://localhost:3000/chat", { prompt: keyword });
+        setResponse(response?.data?.audio);
+      } catch (error) {
+        console.error("❌ Error sending the request:", error);
+      }
+    }, 3000);
+    return () => clearTimeout(debounceTimer);
+  }
+}, [keyword]);
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Speech Recognition
+The Web Speech API listens for user input and updates the `keyword` state with transcribed text:
+```tsx
+const startListening = () => {
+  const SpeechRecognition =
+    (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+  if (!SpeechRecognition) {
+    alert("❌ Your browser does not support speech recognition.");
+    return;
+  }
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  const recognition = new SpeechRecognition();
+  recognition.lang = "es-ES";
+  recognition.interimResults = true;
+  recognition.continuous = false;
 
-### `npm run eject`
+  recognition.onresult = (event: any) => {
+    const transcript = event.results[0][0].transcript;
+    setKeyword(transcript);
+  };
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+  recognition.onerror = (event: any) => {
+    console.error("❌ Speech recognition error:", event);
+    setIsListening(false);
+  };
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+  recognition.onend = () => {
+    setIsListening(false);
+  };
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+  recognition.start();
+};
+```
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+## Future Improvements
+- Support for multiple languages.
+- Improve error handling.
+- Implement real-time streaming responses.
 
-## Learn More
+## License
+This project is licensed under the MIT License.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
