@@ -10,7 +10,7 @@ function App() {
     if (keyword && keyword.length > 0) {
       const debounceTimer = setTimeout(async () => {
         try {
-          const response = await axios.post("http://localhost:3000/chat", { prompt: keyword });
+          const response = await axios.post("http://149.50.137.171:3000/chat", { prompt: keyword });
           setResponse(response?.data?.audio);
         } catch (error) {
           console.error("❌ Error enviando el audio:", error);
