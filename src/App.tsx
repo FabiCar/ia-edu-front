@@ -65,7 +65,7 @@ function App() {
       {response && (
         <Fragment>
           <p><strong>Respuesta en audio:</strong></p>
-          <audio src={"http://localhost:3000" + response} controls autoPlay />
+          <audio src={"http://149.50.137.171:3000" + response} controls autoPlay />
         </Fragment>
       )}
     </div>
